@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aviator Clone</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
+body{background:#0a0a0a;color:#fff}
+.container{max-width:500px;margin:auto;padding:20px}
+.box{background:#111;padding:20px;border-radius:12px;margin-top:20px;text-align:center}
+.btn{background:#ff0055;padding:10px 15px;border:none;border-radius:8px;color:#fff;cursor:pointer;margin:5px;width:100%;font-weight:600}
+input{width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#000;color:#fff;margin:8px 0}
+#gameArea{height:250px;background:#000;border-radius:10px;position:relative;overflow:hidden;margin:15px 0;border:2px solid #ff0055}
+#plane{position:absolute;bottom:20px;left:20px;font-size:35px;transition:0.1s linear}
+.stats{display:flex;justify-content:space-around;margin:10px 0}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div id="loginBox" class="box">
+    <h2>Login / SignUp</h2>
+    <button class="btn" onclick="googleLogin()">Continue with Google</button>
+    <button class="btn" onclick="phoneLogin()">Login with Phone</button>
+  </div>
+
+  <div id="mainApp" style="display:none">
+    <div class="box">
+      <img id="userPic" width="70" style="border-radius:50%;border:2px solid #ff0055">
+      <h2 id="userName"></h2>
+      <div class="stats">
+        <div>Level<br><b id="userLevel">Bronze</b></div>
+        <div>Balance<br><b id="userBalance">50000</b></div>
+      </div>
+      <p>Referral: <b id="refCode"></b></p>
+      <button class="btn" style="background:#00c853" onclick="addCoins()">+ Fake Deposit 10,000</button>
+      <button class="btn" style="background:#333" onclick="fakeWithdraw()">Withdraw Request</button>
+    </div>
+
+    <div class="box">
+      <h2>Aviator</h2>
+      <div id="gameArea"><div id="plane">✈️</div></div>
+      <input type="number" id="betAmount" value="100">
+      <button id="betBtn" class="btn" onclick="startGame()">PLACE BET</button>
+      <h3 id="result">Waiting for next round...</h3>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // Tumhari Firebase Keys
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAgB73goxRfg858WnDjwThOD9uTa9eVd90",
+    authDomain: "aviator-c10d7.firebaseapp.com",
+    projectId: "aviator-c10d7",
+    storageBucket: "aviator-c10d7.firebasestorage.app",
+    messagingSenderId: "851823623530",
+    appId: "1:851823623530:web:97ee542b9aa596bbf23913",
+    measurementId: "G-EVG4VKDJHE"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let userData = {balance: 50000, level: 'Bronze'};
+  let gameRunning = false;
+
+  window.googleLogin = () => { 
+    signInWithPopup(auth, new GoogleAuthProvider()); 
+  }
+  
+  window.phoneLogin = () => { 
+    let num = prompt("Enter number with +92"); 
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'loginBox', {});
+    signInWithPhoneNumber(auth, num, window.recaptchaVerifier).then(confirmationResult => {
+      let code = prompt("Enter OTP");
+      confirmationResult.confirm(code);
+    });
+  }
+
+  onAuthStateChanged(auth, user => {
+    if(user){
+      document.getElementById('loginBox').style.display='none';
+      document.getElementById('mainApp').style.display='block';
+      document.getElementById('userName').innerText=user.displayName || user.phoneNumber;
+      document.getElementById('userPic').src=user.photoURL || 'https://i.imgur.com/YourDP.jpg';
+      document.getElementById('refCode').innerText='REF'+user.uid.substring(0,6).toUpperCase();
+      loadUserData(user.uid);
+    }
+  });
+
+  window.addCoins = () => { userData.balance += 10000; saveUserData(); }
+  window.fakeWithdraw = () => { alert('Withdraw Request Submitted. 24 hours') }
+  
+  function updateUI(){
+    document.getElementById('userBalance').innerText=userData.balance.toLocaleString();
+    if(userData.balance > 100000) userData.level = 'Silver';
+    document.getElementById('userLevel').innerText=userData.level;
+  }
+  
+  async function saveUserData(){ 
+    updateUI(); 
+    await setDoc(doc(db, "users", auth.currentUser.uid), userData); 
+  }
+  
+  async function loadUserData(uid){
+    const docSnap = await getDoc(doc(db, "users", uid));
+    if(docSnap.exists()) userData = docSnap.data(); 
+    updateUI();
+  }
+
+  window.startGame = () => {
+    if(gameRunning) return;
+    let bet = parseInt(document.getElementById('betAmount').value);
+    if(bet > userData.balance){ alert('Balance kam'); return; }
+    userData.balance -= bet; saveUserData(); gameRunning=true;
+    document.getElementById('betBtn').innerText='CASHOUT';
+    
+    let crashPoint = (Math.random()*8+1).toFixed(2);
+    let multiplier = 1.00; let plane = document.getElementById('plane');
+    let interval = setInterval(()=>{
+      multiplier += 0.04;
+      plane.style.left = (multiplier*25)+'px';
+      plane.style.bottom = (multiplier*25)+'px';
+      document.getElementById('result').innerText = multiplier.toFixed(2)+'x';
+      if(multiplier >= crashPoint){
+        clearInterval(interval); document.getElementById('result').innerText = 'CRASHED at '+crashPoint+'x'; resetBet();
+      }
+    },80)
+    window.currentGame = {interval, multiplier, bet};
+    document.getElementById('betBtn').onclick=cashout;
+  }
+  
+  window.cashout = () => {
+    clearInterval(window.currentGame.interval);
+    let win = window.currentGame.bet * window.currentGame.multiplier;
+    userData.balance += win; saveUserData(); document.getElementById('result').innerText = 'CASHOUT! Won '+win.toFixed(0); resetBet();
+  }
+  
+  function resetBet(){
+    gameRunning=false; document.getElementById('betBtn').innerText='PLACE BET';
+    document.getElementById('betBtn').onclick=startGame;
+    document.getElementById('plane').style.left='20px'; document.getElementById('plane').style.bottom='20px';
+  }
+</script>
+</body>
+</html>
