@@ -3,38 +3,167 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aviator Clone</title>
+<title>Aviator X - Play & Win</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
-body{background:#0a0a0a;color:#fff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(180deg,#05050a 0%,#0a0a1a 100%);color:#fff;font-family:'Poppins',sans-serif;min-height:100vh}
+.header{text-align:center;padding:20px;background:linear-gradient(90deg,#ff0055,#ff8a00);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header h1{font-family:'Orbitron',sans-serif;font-size:32px;letter-spacing:2px}
+.header p{color:#aaa;font-size:12px}
 .container{max-width:500px;margin:auto;padding:20px}
-.box{background:#111;padding:20px;border-radius:12px;margin-top:20px;text-align:center}
-.btn{background:#ff0055;padding:10px 15px;border:none;border-radius:8px;color:#fff;cursor:pointer;margin:5px;width:100%;font-weight:600}
-input{width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#000;color:#fff;margin:8px 0}
-#gameArea{height:250px;background:#000;border-radius:10px;position:relative;overflow:hidden;margin:15px 0;border:2px solid #ff0055}
-#plane{position:absolute;bottom:20px;left:20px;font-size:35px;transition:0.1s linear}
-.stats{display:flex;justify-content:space-around;margin:10px 0}
+.box{background:rgba(20,20,30,0.7);backdrop-filter:blur(10px);padding:25px;border-radius:16px;margin-top:20px;text-align:center;border:1px solid rgba(255,0,85,0.3);box-shadow:0 0 20px rgba(255,0,85,0.2)}
+.btn{background:linear-gradient(90deg,#ff0055,#ff3366);padding:14px 15px;border:none;border-radius:10px;color:#fff;cursor:pointer;margin:8px 0;width:100%;font-weight:600;font-size:15px;transition:0.2s}
+.btn:hover{transform:scale(1.03);box-shadow:0 0 15px #ff0055}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#0a0a0a;color:#fff;margin:8px 0;font-size:16px}
+#gameArea{height:280px;background:linear-gradient(180deg,#001122 0%,#000 100%);border-radius:12px;position:relative;overflow:hidden;margin:15px 0;border:2px solid #ff0055}
+#plane{position:absolute;bottom:20px;left:20px;font-size:40px;transition:0.08s linear;text-shadow:0 0 10px #00ff88}
+#multiplier{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron',sans-serif;font-size:48px;font-weight:800;color:#00ff88;text-shadow:0 0 20px #00ff88}
+.stats{display:flex;justify-content:space-around;margin:15px 0}
+.stat-item{background:#0a0a0a;padding:10px;border-radius:10px;width:48%}
+.logo{font-size:50px;margin-bottom:10px}
 </style>
 </head>
 <body>
 
+<div class="header">
+  <h1>✈️ AVIATOR X</h1>
+  <p>CASH OUT BEFORE THE PLANE CRASHES</p>
+</div>
+
 <div class="container">
   <div id="loginBox" class="box">
-    <h2>Login / SignUp</h2>
+    <div class="logo">✈️</div>
+    <h2>Welcome to Aviator X</h2>
+    <p style="color:#aaa;font-size:13px;margin:10px 0">Login to start playing</p>
     <button class="btn" onclick="googleLogin()">Continue with Google</button>
-    <button class="btn" onclick="phoneLogin()">Login with Phone</button>
+    <button class="btn" style="background:linear-gradient(90deg,#25D366,#128C7E)" onclick="phoneLogin()">Login with Phone</button>
   </div>
 
   <div id="mainApp" style="display:none">
     <div class="box">
-      <img id="userPic" width="70" style="border-radius:50%;border:2px solid #ff0055">
+      <img id="userPic" width="70" style="border-radius:50%;border:3px solid #ff0055">
       <h2 id="userName"></h2>
       <div class="stats">
-        <div>Level<br><b id="userLevel">Bronze</b></div>
-        <div>Balance<br><b id="userBalance">50000</b></div>
+        <div class="stat-item">Level<br><b id="userLevel" style="color:#ffaa00">Bronze</b></div>
+        <div class="stat-item">Balance<br><b id="userBalance" style="color:#00ff88">50,000</b></div>
       </div>
-      <p>Referral: <b id="refCode"></b></p>
-      <button class="btn" style="background:#00c853" onclick="addCoins()">+ Fake Deposit 10,000</button>
+      <p style="font-size:12px">Referral: <b id="refCode" style="color:#ff0055"></b></p>
+      <button class="btn" style="background:linear-gradient(90deg,#00c853,#00e676)" onclick="addCoins()">+ Add 10,000 Coins</button>
+      <button class="btn" style="background:#333" onclick="fakeWithdraw()">Withdraw Request</button>
+    </div>
+
+    <div class="box">
+      <h2 style="font-family:'Orbitron',sans-serif">AVIATOR GAME</h2>
+      <div id="gameArea">
+        <div id="multiplier">1.00x</div>
+        <div id="plane">✈️</div>
+      </div>
+      <input type="number" id="betAmount" value="100" placeholder="Enter Bet Amount">
+      <button id="betBtn" class="btn" onclick="startGame()">PLACE BET</button>
+      <h3 id="result" style="color:#aaa;margin-top:10px">Waiting for next round...</h3>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAgB73goxRfg858WnDjwThOD9uTa9eVd90",
+    authDomain: "aviator-c10d7.firebaseapp.com",
+    projectId: "aviator-c10d7",
+    storageBucket: "aviator-c10d7.firebasestorage.app",
+    messagingSenderId: "851823623530",
+    appId: "1:851823623530:web:97ee542b9aa596bbf23913",
+    measurementId: "G-EVG4VKDJHE"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let userData = {balance: 50000, level: 'Bronze'};
+  let gameRunning = false;
+
+  window.googleLogin = () => { signInWithRedirect(auth, new GoogleAuthProvider()); }
+  getRedirectResult(auth).then((result) => { if(result) console.log("Login success"); });
+  
+  window.phoneLogin = () => { 
+    let num = prompt("Enter number with +92"); 
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'loginBox', {size: 'invisible'});
+    signInWithPhoneNumber(auth, num, window.recaptchaVerifier).then(confirmationResult => {
+      let code = prompt("Enter OTP");
+      confirmationResult.confirm(code);
+    }).catch(e => alert(e.message));
+  }
+
+  onAuthStateChanged(auth, user => {
+    if(user){
+      document.getElementById('loginBox').style.display='none';
+      document.getElementById('mainApp').style.display='block';
+      document.getElementById('userName').innerText=user.displayName || user.phoneNumber;
+      document.getElementById('userPic').src=user.photoURL || 'https://i.imgur.com/YourDP.jpg';
+      document.getElementById('refCode').innerText='REF'+user.uid.substring(0,6).toUpperCase();
+      loadUserData(user.uid);
+    }
+  });
+
+  window.addCoins = () => { userData.balance += 10000; saveUserData(); }
+  window.fakeWithdraw = () => { alert('Withdraw Request Submitted. 24 hours') }
+  
+  function updateUI(){
+    document.getElementById('userBalance').innerText=userData.balance.toLocaleString();
+    if(userData.balance > 200000) userData.level = 'Gold';
+    else if(userData.balance > 100000) userData.level = 'Silver';
+    document.getElementById('userLevel').innerText=userData.level;
+  }
+  
+  async function saveUserData(){ updateUI(); await setDoc(doc(db, "users", auth.currentUser.uid), userData); }
+  async function loadUserData(uid){ const docSnap = await getDoc(doc(db, "users", uid)); if(docSnap.exists()) userData = docSnap.data(); updateUI(); }
+
+  window.startGame = () => {
+    if(gameRunning) return;
+    let bet = parseInt(document.getElementById('betAmount').value);
+    if(bet > userData.balance){ alert('Insufficient Balance'); return; }
+    userData.balance -= bet; saveUserData(); gameRunning=true;
+    document.getElementById('betBtn').innerText='CASHOUT NOW!';
+    
+    let crashPoint = (Math.random()*9+1.10).toFixed(2);
+    let multiplier = 1.00; let plane = document.getElementById('plane');
+    let interval = setInterval(()=>{
+      multiplier += 0.05;
+      plane.style.left = (multiplier*20)+'px';
+      plane.style.bottom = (multiplier*20)+'px';
+      document.getElementById('multiplier').innerText = multiplier.toFixed(2)+'x';
+      if(multiplier >= crashPoint){
+        clearInterval(interval); document.getElementById('result').innerText = '💥 CRASHED at '+crashPoint+'x'; 
+        document.getElementById('multiplier').style.color='#ff0055'; resetBet();
+      }
+    },70)
+    window.currentGame = {interval, multiplier, bet};
+    document.getElementById('betBtn').onclick=cashout;
+  }
+  
+  window.cashout = () => {
+    clearInterval(window.currentGame.interval);
+    let win = window.currentGame.bet * window.currentGame.multiplier;
+    userData.balance += win; saveUserData(); 
+    document.getElementById('result').innerText = '✅ CASHOUT! Won '+win.toFixed(0)+' Coins';
+    document.getElementById('multiplier').style.color='#00ff88'; resetBet();
+  }
+  
+  function resetBet(){
+    gameRunning=false; document.getElementById('betBtn').innerText='PLACE BET';
+    document.getElementById('betBtn').onclick=startGame;
+    document.getElementById('plane').style.left='20px'; document.getElementById('plane').style.bottom='20px';
+    document.getElementById('multiplier').innerText='1.00x';
+  }
+</script>
+</body>
+</html>      <button class="btn" style="background:#00c853" onclick="addCoins()">+ Fake Deposit 10,000</button>
       <button class="btn" style="background:#333" onclick="fakeWithdraw()">Withdraw Request</button>
     </div>
 
