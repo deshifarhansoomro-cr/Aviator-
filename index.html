@@ -51,7 +51,7 @@ input{width:100%;padding:10px;border-radius:8px;border:1px solid #333;background
 <script type="module">
   // Tumhari Firebase Keys
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -71,17 +71,25 @@ input{width:100%;padding:10px;border-radius:8px;border:1px solid #333;background
   let userData = {balance: 50000, level: 'Bronze'};
   let gameRunning = false;
 
+  // YE CHANGE KIYA HAI - POPUP SE REDIRECT
   window.googleLogin = () => { 
-    signInWithPopup(auth, new GoogleAuthProvider()); 
+    signInWithRedirect(auth, new GoogleAuthProvider()); 
   }
+  
+  // Wapas aane pe result check karega
+  getRedirectResult(auth).then((result) => {
+    if(result) console.log("Login success");
+  }).catch((error) => {
+    console.log(error);
+  });
   
   window.phoneLogin = () => { 
     let num = prompt("Enter number with +92"); 
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'loginBox', {});
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'loginBox', {size: 'invisible'});
     signInWithPhoneNumber(auth, num, window.recaptchaVerifier).then(confirmationResult => {
       let code = prompt("Enter OTP");
       confirmationResult.confirm(code);
-    });
+    }).catch(e => alert(e.message));
   }
 
   onAuthStateChanged(auth, user => {
